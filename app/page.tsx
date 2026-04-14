@@ -2143,6 +2143,54 @@ export default function YulturnWikiPrototype() {
     return [...sectionPages, ...peoplePages];
   }, [data]);
 
+  useEffect(() => {
+  if (!sessionUser) return;
+
+  const channel = supabase
+    .channel('wiki-realtime')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'wiki_pages' },
+      async () => {
+        try {
+          const latest = await loadDataFromSupabase();
+          setData(latest);
+        } catch (error) {
+          console.error('realtime reload error:', error);
+        }
+      }
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'audit_logs' },
+      async () => {
+        try {
+          const latest = await loadDataFromSupabase();
+          setData(latest);
+        } catch (error) {
+          console.error('realtime reload error:', error);
+        }
+      }
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'audit_changes' },
+      async () => {
+        try {
+          const latest = await loadDataFromSupabase();
+          setData(latest);
+        } catch (error) {
+          console.error('realtime reload error:', error);
+        }
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [sessionUser]);
+
   const visiblePages = useMemo(() => {
     if (sessionUser?.isAdmin) return allPages;
     return allPages.filter((page) => page.id !== ADMIN_PAGE_ID);
