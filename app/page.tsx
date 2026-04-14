@@ -840,8 +840,54 @@ async function seedSupabaseIfEmpty() {
   if (insertLogsError) throw insertLogsError;
 }
 
+async function syncFixedPagesToSupabase() {
+  const fixedPageIds = new Set([
+    'main',
+    'interns-2026h1',
+    'team-accounting',
+    'team-billing',
+    'team-knowledge',
+    'team-education',
+    'team-people',
+    'team-support',
+    'team-marketing',
+    'team-hr-development',
+    'team-payroll',
+    'team-infosec',
+    'team-bd-infra',
+    'team-legal-support',
+    'team-customer-support',
+    'team-strategy',
+    'team-research',
+    'operating-rules',
+    ADMIN_PAGE_ID,
+  ]);
+
+  const fixedPages = [...seedData.sections, ...seedData.people]
+    .filter((page) => fixedPageIds.has(page.id))
+    .map((page) => ({
+      id: page.id,
+      title: page.title,
+      summary: page.summary,
+      content: page.content,
+      category: page.category ?? null,
+      icon: page.icon ?? null,
+      group: page.group ?? null,
+      team: page.team ?? null,
+      updated_at: page.updatedAt,
+      updated_by: page.updatedBy,
+    }));
+
+  const { error } = await supabase.from('wiki_pages').upsert(fixedPages, {
+    onConflict: 'id',
+  });
+
+  if (error) throw error;
+}
+
 async function loadDataFromSupabase(): Promise<WikiData> {
   await seedSupabaseIfEmpty();
+  await syncFixedPagesToSupabase();
 
   const [
     { data: pageRows, error: pageError },
