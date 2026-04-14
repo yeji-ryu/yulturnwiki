@@ -2247,56 +2247,58 @@ export default function YulturnWikiPrototype() {
   };
 
   const handleSave = async () => {
-    if (!draft || !sessionUser || !selectedPage) return;
-    if (draft.id === ADMIN_PAGE_ID && !sessionUser.isAdmin) return;
+  if (!draft || !sessionUser || !selectedPage) return;
+  if (draft.id === ADMIN_PAGE_ID && !sessionUser.isAdmin) return;
 
-    const original =
-      data.people.find((item) => item.id === draft.id) ||
-      data.sections.find((item) => item.id === draft.id);
+  const original =
+    data.people.find((item) => item.id === draft.id) ||
+    data.sections.find((item) => item.id === draft.id);
 
-    if (!original) return;
+  if (!original) return;
 
-    const next: WikiPage = {
-      ...draft,
-      updatedAt: new Date().toISOString(),
-      updatedBy: sessionUser.name,
-    };
-
-    const changes = buildAuditChanges(original, next);
-
-    const log = pushLog(
-      next.id,
-      next.title,
-      'update',
-      changes.length > 0 ? '문서 내용 수정' : '저장',
-      changes,
-    );
-
-    try {
-      await savePageToSupabase(next);
-      if (log) await saveAuditLogToSupabase(log);
-
-      const isPerson = data.people.some((item) => item.id === next.id);
-
-      const updated: WikiData = isPerson
-        ? {
-            ...data,
-            people: data.people.map((item) => (item.id === next.id ? next : item)),
-            auditLogs: log ? [...data.auditLogs, log] : data.auditLogs,
-          }
-        : {
-            ...data,
-            sections: data.sections.map((item) => (item.id === next.id ? next : item)),
-            auditLogs: log ? [...data.auditLogs, log] : data.auditLogs,
-          };
-
-      setData(updated);
-      setEditing(false);
-    } catch (error) {
-      console.error('Supabase save error:', error);
-      window.alert('저장 중 오류가 발생했습니다.');
-    }
+  const next: WikiPage = {
+    ...draft,
+    updatedAt: new Date().toISOString(),
+    updatedBy: sessionUser.name,
   };
+
+  const changes = buildAuditChanges(original, next);
+
+  const log = pushLog(
+    next.id,
+    next.title,
+    'update',
+    changes.length > 0 ? '문서 내용 수정' : '저장',
+    changes,
+  );
+
+  try {
+    await savePageToSupabase(next);
+    if (log) {
+      await saveAuditLogToSupabase(log);
+    }
+
+    const isPerson = data.people.some((item) => item.id === next.id);
+
+    const updated: WikiData = isPerson
+      ? {
+          ...data,
+          people: data.people.map((item) => (item.id === next.id ? next : item)),
+          auditLogs: log ? [...data.auditLogs, log] : data.auditLogs,
+        }
+      : {
+          ...data,
+          sections: data.sections.map((item) => (item.id === next.id ? next : item)),
+          auditLogs: log ? [...data.auditLogs, log] : data.auditLogs,
+        };
+
+    setData(updated);
+    setEditing(false);
+  } catch (error) {
+    console.error('Supabase save error:', error);
+    window.alert('저장 중 오류가 발생했습니다.');
+  }
+};
 
   const handleShare = async () => {
     if (!selectedPage) return;
