@@ -1,3 +1,4 @@
+import { supabase } from '@/lib/supabase';
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -238,8 +239,199 @@ const HARD_CODED_USERS: UserAccount[] = [
   },
 ];
 
-const STORAGE_KEY = 'yulturn-wiki-data-v8';
 const SESSION_KEY = 'yulturn-wiki-session-v1';
+
+type WikiPageRow = {
+  id: string;
+  title: string;
+  summary: string | null;
+  content: string | null;
+  category: string | null;
+  icon: string | null;
+  group: string | null;
+  team: string | null;
+  updated_at: string | null;
+  updated_by: string | null;
+};
+
+type AuditLogRow = {
+  id: string;
+  page_id: string;
+  page_title: string | null;
+  action: 'seed' | 'update';
+  actor_id: string | null;
+  actor_name: string | null;
+  actor_role: string | null;
+  timestamp: string | null;
+  summary: string | null;
+};
+
+type AuditChangeRow = {
+  id: number;
+  log_id: string;
+  field: 'title' | 'summary' | 'content';
+  before: string | null;
+  after: string | null;
+};
+
+function mapRowToWikiPage(row: WikiPageRow): WikiPage {
+  return {
+    id: row.id,
+    title: row.title,
+    summary: row.summary ?? '',
+    content: row.content ?? '',
+    category: row.category ?? undefined,
+    icon: row.icon ?? undefined,
+    group: row.group ?? undefined,
+    team: (row.team as TeamKey | null) ?? undefined,
+    updatedAt: row.updated_at ?? new Date().toISOString(),
+    updatedBy: row.updated_by ?? 'system',
+  };
+}
+
+function mapAuditRows(
+  logs: AuditLogRow[],
+  changes: AuditChangeRow[],
+): AuditLog[] {
+  return logs.map((log) => ({
+    id: log.id,
+    pageId: log.page_id,
+    pageTitle: log.page_title ?? '',
+    action: log.action,
+    actorId: log.actor_id ?? '',
+    actorName: log.actor_name ?? '',
+    actorRole: log.actor_role ?? '',
+    timestamp: log.timestamp ?? new Date().toISOString(),
+    summary: log.summary ?? '',
+    changes: changes
+      .filter((change) => change.log_id === log.id)
+      .map((change) => ({
+        field: change.field,
+        before: change.before ?? '',
+        after: change.after ?? '',
+      })),
+  }));
+}
+
+async function seedSupabaseIfEmpty() {
+  const { count, error } = await supabase
+    .from('wiki_pages')
+    .select('*', { count: 'exact', head: true });
+
+  if (error) throw error;
+  if ((count ?? 0) > 0) return;
+
+  const seedPages = [...seedData.sections, ...seedData.people].map((page) => ({
+    id: page.id,
+    title: page.title,
+    summary: page.summary,
+    content: page.content,
+    category: page.category ?? null,
+    icon: page.icon ?? null,
+    group: page.group ?? null,
+    team: page.team ?? null,
+    updated_at: page.updatedAt,
+    updated_by: page.updatedBy,
+  }));
+
+  const { error: insertPagesError } = await supabase
+    .from('wiki_pages')
+    .insert(seedPages);
+
+  if (insertPagesError) throw insertPagesError;
+
+  const seedLogs = seedData.auditLogs.map((log) => ({
+    id: log.id,
+    page_id: log.pageId,
+    page_title: log.pageTitle,
+    action: log.action,
+    actor_id: log.actorId,
+    actor_name: log.actorName,
+    actor_role: log.actorRole,
+    timestamp: log.timestamp,
+    summary: log.summary,
+  }));
+
+  const { error: insertLogsError } = await supabase
+    .from('audit_logs')
+    .insert(seedLogs);
+
+  if (insertLogsError) throw insertLogsError;
+}
+
+async function loadDataFromSupabase(): Promise<WikiData> {
+  await seedSupabaseIfEmpty();
+
+  const [{ data: pageRows, error: pageError }, { data: logRows, error: logError }, { data: changeRows, error: changeError }] =
+    await Promise.all([
+      supabase.from('wiki_pages').select('*').order('id'),
+      supabase.from('audit_logs').select('*').order('timestamp', { ascending: true }),
+      supabase.from('audit_changes').select('*').order('id', { ascending: true }),
+    ]);
+
+  if (pageError) throw pageError;
+  if (logError) throw logError;
+  if (changeError) throw changeError;
+
+  const pages = ((pageRows ?? []) as WikiPageRow[]).map(mapRowToWikiPage);
+
+  return {
+    people: pages.filter((page) => page.category === '사람 문서'),
+    sections: pages.filter((page) => page.category !== '사람 문서'),
+    auditLogs: mapAuditRows(
+      (logRows ?? []) as AuditLogRow[],
+      (changeRows ?? []) as AuditChangeRow[],
+    ),
+  };
+}
+
+async function savePageToSupabase(page: WikiPage) {
+  const { error } = await supabase.from('wiki_pages').upsert({
+    id: page.id,
+    title: page.title,
+    summary: page.summary,
+    content: page.content,
+    category: page.category ?? null,
+    icon: page.icon ?? null,
+    group: page.group ?? null,
+    team: page.team ?? null,
+    updated_at: page.updatedAt,
+    updated_by: page.updatedBy,
+  });
+
+  if (error) throw error;
+}
+
+async function saveAuditLogToSupabase(log: AuditLog) {
+  const { changes = [], ...rest } = log;
+
+  const { error: logError } = await supabase.from('audit_logs').insert({
+    id: rest.id,
+    page_id: rest.pageId,
+    page_title: rest.pageTitle,
+    action: rest.action,
+    actor_id: rest.actorId,
+    actor_name: rest.actorName,
+    actor_role: rest.actorRole,
+    timestamp: rest.timestamp,
+    summary: rest.summary,
+  });
+
+  if (logError) throw logError;
+
+  if (changes.length > 0) {
+    const { error: changesError } = await supabase.from('audit_changes').insert(
+      changes.map((change) => ({
+        log_id: rest.id,
+        field: change.field,
+        before: change.before,
+        after: change.after,
+      })),
+    );
+
+    if (changesError) throw changesError;
+  }
+}
 
 const TEAM_ORDER: TeamKey[] = [
   '회계팀',
@@ -894,39 +1086,6 @@ function formatDate(value: string) {
   });
 }
 
-function loadData(): WikiData {
-  if (!isBrowser()) return seedData;
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return seedData;
-
-    const parsed = JSON.parse(raw) as Partial<WikiData>;
-
-    return {
-      people: Array.isArray(parsed.people) ? parsed.people : seedData.people,
-      sections: Array.isArray(parsed.sections)
-        ? parsed.sections
-        : seedData.sections,
-      auditLogs: Array.isArray(parsed.auditLogs)
-        ? parsed.auditLogs
-        : seedData.auditLogs,
-    };
-  } catch (error) {
-    console.error('loadData error:', error);
-    return seedData;
-  }
-}
-
-function saveData(nextData: WikiData) {
-  if (!isBrowser()) return;
-
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextData));
-  } catch (error) {
-    console.error('saveData error:', error);
-  }
-}
 
 function loadSession(): UserAccount | null {
   if (!isBrowser()) return null;
@@ -2148,6 +2307,8 @@ function WikiArticle({
   );
 }
 
+
+
 export default function YulturnWikiPrototype() {
   const [sessionUser, setSessionUser] = useState<UserAccount | null>(null);
   const [data, setData] = useState<WikiData>(seedData);
@@ -2157,15 +2318,47 @@ export default function YulturnWikiPrototype() {
   const [draft, setDraft] = useState<WikiPage | null>(null);
   const [history, setHistory] = useState<string[]>([]);
 
-  useEffect(() => {
-    const loadedData = loadData();
-    setData(loadedData);
+  const [loading, setLoading] = useState(true);
 
-    const loadedSession = loadSession();
-    if (loadedSession) {
-      setSessionUser(loadedSession);
+  if (loading) {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      불러오는 중...
+    </div>
+  );
+}
+
+useEffect(() => {
+  let mounted = true;
+
+  const init = async () => {
+    try {
+      const loadedData = await loadDataFromSupabase(); // 🔥 여기 핵심
+      if (mounted) {
+        setData(loadedData);
+      }
+    } catch (error) {
+      console.error('Supabase load error:', error);
+      if (mounted) {
+        setData(seedData); // fallback
+      }
+    } finally {
+      const loadedSession = loadSession();
+      if (mounted && loadedSession) {
+        setSessionUser(loadedSession);
+      }
+      if (mounted) {
+        setLoading(false);
+      }
     }
-  }, []);
+  };
+
+  init();
+
+  return () => {
+    mounted = false;
+  };
+}, []);
 
   const allPages = useMemo<WikiPage[]>(() => {
     const peoplePages = data.people.map((item) => ({
@@ -2335,7 +2528,6 @@ export default function YulturnWikiPrototype() {
         };
 
     setData(updated);
-    saveData(updated);
     setEditing(false);
   };
 
