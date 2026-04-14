@@ -137,6 +137,7 @@ const HARD_CODED_USERS: UserAccount[] = [
   { id: '정도연', password: '1050', name: '정도연', role: '인턴', isAdmin: false },
   { id: '정성태', password: '0015', name: '정성태', role: '인턴', isAdmin: false },
   { id: '조민정', password: '1092', name: '조민정', role: '인턴', isAdmin: false },
+  { id: '원혁진', password: '2060', name: '원혁진', role: '인턴', isAdmin: false },
   { id: 'admin', password: '123', name: '운영자', role: '관리자', isAdmin: true },
 ];
 
@@ -220,6 +221,7 @@ const USER_TEAM_MAP: Partial<Record<string, TeamKey>> = {
   정도연: '업무지원팀',
   정성태: '리서치팀',
   조민정: '업무지원팀',
+  원혁진: '회계팀'
 };
 
 function buildPersonPages(): WikiPage[] {
@@ -329,6 +331,7 @@ const seedData: WikiData = {
 - [[정도연|정도연]]
 - [[정성태|정성태]]
 - [[조민정|조민정]]
+- [[원혁진|원혁진]]
 
 [안내]
 - 팀 이름을 누르면 팀 소개 화면으로 이동합니다.
@@ -941,6 +944,28 @@ async function saveAuditLogToSupabase(log: AuditLog) {
   }
 }
 
+async function uploadImageToSupabase(file: File) {
+  const safeName = file.name.replace(/\s+/g, '-');
+  const filePath = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('wiki-images')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false,
+    });
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage.from('wiki-images').getPublicUrl(filePath);
+
+  return {
+    filePath,
+    fileName: file.name,
+    publicUrl: data.publicUrl,
+  };
+}
+
 function formatDate(value: string) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return '';
@@ -1165,6 +1190,16 @@ function parseStyledInline(
   return nodes;
 }
 
+function parseImageToken(value: string) {
+  const match = value.match(/^\{\{image:([^|}]+)\|([^}]+)\}\}$/);
+  if (!match) return null;
+
+  return {
+    path: match[1],
+    name: match[2],
+  };
+}
+
 function renderWikiText(
   text: string,
   onNavigate: (pageId: string) => void,
@@ -1183,19 +1218,24 @@ function renderWikiText(
         className="my-2 ml-6 list-disc space-y-1 text-[15px] leading-8 text-[#444]"
       >
         {listItems.map((item, idx) => {
-          const imageMatch = item.match(/^\{\{image:(.+)\}\}$/);
+          const imageToken = parseImageToken(item);
 
-          if (imageMatch) {
-            return (
-              <li key={`${item}-${idx}`} className="ml-[-24px] list-none">
-                <img
-                  src={imageMatch[1]}
-                  alt="삽입 이미지"
-                  className="max-h-[420px] max-w-full rounded border border-[#ddd]"
-                />
-              </li>
-            );
-          }
+            if (imageToken) {
+              const { data } = supabase.storage.from('wiki-images').getPublicUrl(imageToken.path);
+
+              return (
+                <li key={`${item}-${idx}`} className="ml-[-24px] list-none">
+                  <figure>
+                    <img
+                      src={data.publicUrl}
+                      alt={imageToken.name}
+                      className="max-h-[420px] max-w-full rounded border border-[#ddd]"
+                    />
+                    <figcaption className="mt-2 text-xs text-[#777]">{imageToken.name}</figcaption>
+                  </figure>
+                </li>
+              );
+            }
 
           return <li key={`${item}-${idx}`}>{parseStyledInline(item, onNavigate)}</li>;
         })}
@@ -1231,16 +1271,21 @@ function renderWikiText(
       return;
     }
 
-    const imageMatch = trimmed.match(/^\{\{image:(.+)\}\}$/);
-    if (imageMatch) {
+        const imageToken = parseImageToken(trimmed);
+    if (imageToken) {
       flushList();
+
+      const { data } = supabase.storage.from('wiki-images').getPublicUrl(imageToken.path);
+
       elements.push(
-        <img
-          key={`image-${index}`}
-          src={imageMatch[1]}
-          alt="삽입 이미지"
-          className="my-4 max-h-[520px] max-w-full rounded border border-[#ddd]"
-        />,
+        <figure key={`image-${index}`} className="my-4">
+          <img
+            src={data.publicUrl}
+            alt={imageToken.name}
+            className="max-h-[520px] max-w-full rounded border border-[#ddd]"
+          />
+          <figcaption className="mt-2 text-xs text-[#777]">{imageToken.name}</figcaption>
+        </figure>,
       );
       return;
     }
@@ -1670,7 +1715,7 @@ function TeamMembersBlock({
 function EditorImageTools({
   onAppendImage,
 }: {
-  onAppendImage: (dataUrl: string) => void;
+  onAppendImage: (file: File) => Promise<void>;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -1690,21 +1735,22 @@ function EditorImageTools({
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={(e) => {
+        onChange={async (e) => {
           const file = e.target.files?.[0];
           if (!file) return;
 
-          const reader = new FileReader();
-          reader.onload = () => {
-            const result = reader.result;
-            if (typeof result === 'string') onAppendImage(result);
-          };
-          reader.readAsDataURL(file);
-          e.currentTarget.value = '';
+          try {
+            await onAppendImage(file);
+          } catch (error) {
+            console.error('image upload error:', error);
+            window.alert('이미지 업로드에 실패했습니다.');
+          } finally {
+            e.currentTarget.value = '';
+          }
         }}
       />
 
-      <div className="text-xs text-[#777]">업로드한 사진은 문서 본문에 바로 들어갑니다.</div>
+      <div className="text-xs text-[#777]">업로드한 사진은 본문에 파일명 형태로 삽입됩니다.</div>
     </div>
   );
 }
@@ -2063,11 +2109,18 @@ function WikiArticle({
               <EditorStyleToolbar textareaRef={textareaRef} setDraft={setDraft} />
 
               <EditorImageTools
-                onAppendImage={(dataUrl) =>
+                onAppendImage={async (file) => {
+                  const uploaded = await uploadImageToSupabase(file);
+
                   setDraft((prev) =>
-                    prev ? { ...prev, content: `${prev.content}\n\n{{image:${dataUrl}}}` } : prev,
-                  )
-                }
+                    prev
+                      ? {
+                          ...prev,
+                          content: `${prev.content}\n\n{{image:${uploaded.filePath}|${uploaded.fileName}}}`,
+                        }
+                      : prev,
+                  );
+                }}
               />
 
               <textarea
