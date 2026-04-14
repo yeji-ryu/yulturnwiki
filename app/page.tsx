@@ -2111,6 +2111,7 @@ export default function YulturnWikiPrototype() {
         if (mounted) setData(loadedData);
       } catch (error) {
         console.error('Supabase load error:', error);
+        window.alert(`Supabase load error: ${JSON.stringify(error)}`);
         if (mounted) setData(seedData);
       } finally {
         const loadedSession = loadSession();
@@ -2296,7 +2297,7 @@ export default function YulturnWikiPrototype() {
     setEditing(false);
   } catch (error) {
     console.error('Supabase save error:', error);
-    window.alert('저장 중 오류가 발생했습니다.');
+    window.alert(`Supabase save error: ${JSON.stringify(error)}`);
   }
 };
 
