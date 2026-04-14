@@ -945,7 +945,9 @@ async function saveAuditLogToSupabase(log: AuditLog) {
 }
 
 async function uploadImageToSupabase(file: File) {
-  const safeName = file.name.replace(/\s+/g, '-');
+  const safeName = file.name
+  .replace(/\s+/g, '-')           // 공백 → -
+  .replace(/[^a-zA-Z0-9.\-_]/g, ''); // 한글/특수문자 제거
   const filePath = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
 
   const { data: uploadData, error: uploadError } = await supabase.storage
