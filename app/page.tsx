@@ -1,6 +1,4 @@
 'use client';
-console.log('SUPABASE URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-console.log('SUPABASE KEY EXISTS:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
