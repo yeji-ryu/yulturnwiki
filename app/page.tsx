@@ -30,7 +30,7 @@ type UserAccount = {
 type TeamKey =
   | '회계팀'
   | '빌링팀'
-  | '교육팀'
+  | '컬처팀'
   | '피플팀'
   | '업무지원팀'
   | '전략마케팅팀'
@@ -147,7 +147,7 @@ const nowIso = new Date().toISOString();
 const TEAM_ORDER: TeamKey[] = [
   '회계팀',
   '빌링팀',
-  '교육팀',
+  '컬처팀',
   '피플팀',
   '업무지원팀',
   '전략마케팅팀',
@@ -164,7 +164,7 @@ const TEAM_ORDER: TeamKey[] = [
 const TEAM_PAGE_MAP: Record<TeamKey, string> = {
   회계팀: 'team-accounting',
   빌링팀: 'team-billing',
-  교육팀: 'team-education',
+  컬처팀: 'team-education',
   피플팀: 'team-people',
   업무지원팀: 'team-support',
   전략마케팅팀: 'team-marketing',
@@ -181,7 +181,7 @@ const TEAM_PAGE_MAP: Record<TeamKey, string> = {
 const TEAM_ID_TO_KEY: Record<string, TeamKey> = {
   'team-accounting': '회계팀',
   'team-billing': '빌링팀',
-  'team-education': '교육팀',
+  'team-education': '컬처팀',
   'team-people': '피플팀',
   'team-support': '업무지원팀',
   'team-marketing': '전략마케팅팀',
@@ -200,7 +200,7 @@ const USER_TEAM_MAP: Partial<Record<string, TeamKey>> = {
   김민지: '빌링팀',
   김서진: '빌링팀',
   김재연: '전략기획실',
-  김지현: '교육팀',
+  김지현: '컬처팀',
   김태희: '피플팀',
   박세민: '업무지원팀',
   박주희: '피플팀',
@@ -291,7 +291,7 @@ const seedData: WikiData = {
 [팀별 이동]
 - [[team-accounting|회계팀]]
 - [[team-billing|빌링팀]]
-- [[team-education|교육팀]]
+- [[team-education|컬처팀]]
 - [[team-people|피플팀]]
 - [[team-support|업무지원팀]]
 - [[team-marketing|전략마케팅팀]]
@@ -381,12 +381,12 @@ const seedData: WikiData = {
     },
     {
       id: 'team-education',
-      title: '교육팀',
+      title: '컬처팀',
       category: '팀 문서',
       icon: 'people',
-      summary: '2026 상반기 교육팀 소개 문서',
+      summary: '2026 상반기 컬처팀 소개 문서',
       content: `[팀 소개]
-교육팀은 사내 교육 및 프로그램 운영을 담당합니다.
+컬처팀은 사내 교육 및 프로그램 운영을 담당합니다.
 
 [분위기]
 - 소통 중요
