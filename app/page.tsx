@@ -30,7 +30,6 @@ type UserAccount = {
 type TeamKey =
   | '회계팀'
   | '빌링팀'
-  | '지식관리팀'
   | '교육팀'
   | '피플팀'
   | '업무지원팀'
@@ -41,7 +40,7 @@ type TeamKey =
   | 'BD인프라팀'
   | '법무지원팀'
   | '고객지원팀'
-  | '전략기획팀'
+  | '전략기획실'
   | '리서치팀';
 
 type WikiPage = {
@@ -148,7 +147,6 @@ const nowIso = new Date().toISOString();
 const TEAM_ORDER: TeamKey[] = [
   '회계팀',
   '빌링팀',
-  '지식관리팀',
   '교육팀',
   '피플팀',
   '업무지원팀',
@@ -159,14 +157,13 @@ const TEAM_ORDER: TeamKey[] = [
   'BD인프라팀',
   '법무지원팀',
   '고객지원팀',
-  '전략기획팀',
+  '전략기획실',
   '리서치팀',
 ];
 
 const TEAM_PAGE_MAP: Record<TeamKey, string> = {
   회계팀: 'team-accounting',
   빌링팀: 'team-billing',
-  지식관리팀: 'team-knowledge',
   교육팀: 'team-education',
   피플팀: 'team-people',
   업무지원팀: 'team-support',
@@ -177,14 +174,13 @@ const TEAM_PAGE_MAP: Record<TeamKey, string> = {
   BD인프라팀: 'team-bd-infra',
   법무지원팀: 'team-legal-support',
   고객지원팀: 'team-customer-support',
-  전략기획팀: 'team-strategy',
+  전략기획실: 'team-strategy',
   리서치팀: 'team-research',
 };
 
 const TEAM_ID_TO_KEY: Record<string, TeamKey> = {
   'team-accounting': '회계팀',
   'team-billing': '빌링팀',
-  'team-knowledge': '지식관리팀',
   'team-education': '교육팀',
   'team-people': '피플팀',
   'team-support': '업무지원팀',
@@ -195,7 +191,7 @@ const TEAM_ID_TO_KEY: Record<string, TeamKey> = {
   'team-bd-infra': 'BD인프라팀',
   'team-legal-support': '법무지원팀',
   'team-customer-support': '고객지원팀',
-  'team-strategy': '전략기획팀',
+  'team-strategy': '전략기획실',
   'team-research': '리서치팀',
 };
 
@@ -203,7 +199,7 @@ const USER_TEAM_MAP: Partial<Record<string, TeamKey>> = {
   강민희: '회계팀',
   김민지: '빌링팀',
   김서진: '빌링팀',
-  김재연: '지식관리팀',
+  김재연: '전략기획실',
   김지현: '교육팀',
   김태희: '피플팀',
   박세민: '업무지원팀',
@@ -217,7 +213,7 @@ const USER_TEAM_MAP: Partial<Record<string, TeamKey>> = {
   이재희: '법무지원팀',
   이채영: '업무지원팀',
   이초원: '고객지원팀',
-  장서현: '전략기획팀',
+  장서현: '전략기획실',
   정도연: '업무지원팀',
   정성태: '리서치팀',
   조민정: '업무지원팀',
@@ -295,7 +291,6 @@ const seedData: WikiData = {
 [팀별 이동]
 - [[team-accounting|회계팀]]
 - [[team-billing|빌링팀]]
-- [[team-knowledge|지식관리팀]]
 - [[team-education|교육팀]]
 - [[team-people|피플팀]]
 - [[team-support|업무지원팀]]
@@ -306,7 +301,7 @@ const seedData: WikiData = {
 - [[team-bd-infra|BD인프라팀]]
 - [[team-legal-support|법무지원팀]]
 - [[team-customer-support|고객지원팀]]
-- [[team-strategy|전략기획팀]]
+- [[team-strategy|전략기획실]]
 - [[team-research|리서치팀]]
 
 [구성원]
@@ -378,28 +373,6 @@ const seedData: WikiData = {
 [업무 팁]
 - 자동화 활용 추천
 - 기록 정리 습관화
-
-[관련 문서]
-- [[interns-2026h1|2026 상반기 인턴]]`,
-      updatedAt: nowIso,
-      updatedBy: 'system',
-    },
-    {
-      id: 'team-knowledge',
-      category: '팀 문서',
-      icon: 'people',
-      title: '지식관리팀',
-      summary: '2026 상반기 지식관리팀 소개 문서',
-      content: `[팀 소개]
-지식관리팀은 문서 관리 및 지식 공유 체계를 운영합니다.
-
-[분위기]
-- 체계적인 정리 중요
-- 협업 필수
-
-[업무 팁]
-- 문서 구조화 필수
-- 검색 편의성 고려
 
 [관련 문서]
 - [[interns-2026h1|2026 상반기 인턴]]`,
@@ -628,12 +601,12 @@ BD인프라팀은 비즈니스 인프라 구축을 담당합니다.
     },
     {
       id: 'team-strategy',
-      title: '전략기획팀',
+      title: '전략기획실',
       category: '팀 문서',
       icon: 'people',
-      summary: '2026 상반기 전략기획팀 소개 문서',
+      summary: '2026 상반기 전략기획실 소개 문서',
       content: `[팀 소개]
-전략기획팀은 조직 전략 및 기획을 담당합니다.
+전략기획실은 조직 전략 및 기획을 담당합니다.
 
 [분위기]
 - 분석 중심
