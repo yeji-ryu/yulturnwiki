@@ -948,19 +948,23 @@ async function uploadImageToSupabase(file: File) {
   const safeName = file.name.replace(/\s+/g, '-');
   const filePath = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
 
-  const { error: uploadError } = await supabase.storage
+  const { data: uploadData, error: uploadError } = await supabase.storage
     .from('wiki-images')
     .upload(filePath, file, {
       cacheControl: '3600',
       upsert: false,
+      contentType: file.type,
     });
 
-  if (uploadError) throw uploadError;
+  if (uploadError) {
+    console.error('uploadError full:', uploadError);
+    throw uploadError;
+  }
 
   const { data } = supabase.storage.from('wiki-images').getPublicUrl(filePath);
 
   return {
-    filePath,
+    filePath: uploadData?.path ?? filePath,
     fileName: file.name,
     publicUrl: data.publicUrl,
   };
@@ -1741,11 +1745,13 @@ function EditorImageTools({
 
           try {
             await onAppendImage(file);
-          } catch (error) {
+          } catch (error: any) {
             console.error('image upload error:', error);
-            window.alert('이미지 업로드에 실패했습니다.');
-          } finally {
-            e.currentTarget.value = '';
+            window.alert(
+              `이미지 업로드 실패: ${
+                error?.message || error?.error_description || JSON.stringify(error)
+              }`
+            );
           }
         }}
       />
