@@ -1,4 +1,3 @@
-import { supabase } from '@/lib/supabase';
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -18,6 +17,7 @@ import {
   Shield,
   Strikethrough,
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 type UserAccount = {
   id: string;
@@ -82,165 +82,6 @@ type WikiData = {
   auditLogs: AuditLog[];
 };
 
-const HARD_CODED_USERS: UserAccount[] = [
-  {
-    id: '강민희',
-    password: '1038',
-    name: '강민희',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '김민지',
-    password: '2102',
-    name: '김민지',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '김서진',
-    password: '3071',
-    name: '김서진',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '김재연',
-    password: '3091',
-    name: '김재연',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '김지현',
-    password: '2164',
-    name: '김지현',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '김태희',
-    password: '0043',
-    name: '김태희',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '박세민',
-    password: '0109',
-    name: '박세민',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '박주희',
-    password: '2175',
-    name: '박주희',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '신나영',
-    password: '9053',
-    name: '신나영',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '엄선우',
-    password: '2126',
-    name: '엄선우',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '연제민',
-    password: '1043',
-    name: '연제민',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '유예지',
-    password: '4217',
-    name: '유예지',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '이수하',
-    password: '1075',
-    name: '이수하',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '이예원',
-    password: '3054',
-    name: '이예원',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '이재희',
-    password: '1104',
-    name: '이재희',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '이채영',
-    password: '0117',
-    name: '이채영',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '이초원',
-    password: '2159',
-    name: '이초원',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '장서현',
-    password: '2113',
-    name: '장서현',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '정도연',
-    password: '1050',
-    name: '정도연',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '정성태',
-    password: '0015',
-    name: '정성태',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: '조민정',
-    password: '1092',
-    name: '조민정',
-    role: '인턴',
-    isAdmin: false,
-  },
-  {
-    id: 'admin',
-    password: '123',
-    name: '운영자',
-    role: '관리자',
-    isAdmin: true,
-  },
-];
-
-const SESSION_KEY = 'yulturn-wiki-session-v1';
-
 type WikiPageRow = {
   id: string;
   title: string;
@@ -274,164 +115,34 @@ type AuditChangeRow = {
   after: string | null;
 };
 
-function mapRowToWikiPage(row: WikiPageRow): WikiPage {
-  return {
-    id: row.id,
-    title: row.title,
-    summary: row.summary ?? '',
-    content: row.content ?? '',
-    category: row.category ?? undefined,
-    icon: row.icon ?? undefined,
-    group: row.group ?? undefined,
-    team: (row.team as TeamKey | null) ?? undefined,
-    updatedAt: row.updated_at ?? new Date().toISOString(),
-    updatedBy: row.updated_by ?? 'system',
-  };
-}
+const HARD_CODED_USERS: UserAccount[] = [
+  { id: '강민희', password: '1038', name: '강민희', role: '인턴', isAdmin: false },
+  { id: '김민지', password: '2102', name: '김민지', role: '인턴', isAdmin: false },
+  { id: '김서진', password: '3071', name: '김서진', role: '인턴', isAdmin: false },
+  { id: '김재연', password: '3091', name: '김재연', role: '인턴', isAdmin: false },
+  { id: '김지현', password: '2164', name: '김지현', role: '인턴', isAdmin: false },
+  { id: '김태희', password: '0043', name: '김태희', role: '인턴', isAdmin: false },
+  { id: '박세민', password: '0109', name: '박세민', role: '인턴', isAdmin: false },
+  { id: '박주희', password: '2175', name: '박주희', role: '인턴', isAdmin: false },
+  { id: '신나영', password: '9053', name: '신나영', role: '인턴', isAdmin: false },
+  { id: '엄선우', password: '2126', name: '엄선우', role: '인턴', isAdmin: false },
+  { id: '연제민', password: '1043', name: '연제민', role: '인턴', isAdmin: false },
+  { id: '유예지', password: '4217', name: '유예지', role: '인턴', isAdmin: false },
+  { id: '이수하', password: '1075', name: '이수하', role: '인턴', isAdmin: false },
+  { id: '이예원', password: '3054', name: '이예원', role: '인턴', isAdmin: false },
+  { id: '이재희', password: '1104', name: '이재희', role: '인턴', isAdmin: false },
+  { id: '이채영', password: '0117', name: '이채영', role: '인턴', isAdmin: false },
+  { id: '이초원', password: '2159', name: '이초원', role: '인턴', isAdmin: false },
+  { id: '장서현', password: '2113', name: '장서현', role: '인턴', isAdmin: false },
+  { id: '정도연', password: '1050', name: '정도연', role: '인턴', isAdmin: false },
+  { id: '정성태', password: '0015', name: '정성태', role: '인턴', isAdmin: false },
+  { id: '조민정', password: '1092', name: '조민정', role: '인턴', isAdmin: false },
+  { id: 'admin', password: '123', name: '운영자', role: '관리자', isAdmin: true },
+];
 
-function mapAuditRows(
-  logs: AuditLogRow[],
-  changes: AuditChangeRow[],
-): AuditLog[] {
-  return logs.map((log) => ({
-    id: log.id,
-    pageId: log.page_id,
-    pageTitle: log.page_title ?? '',
-    action: log.action,
-    actorId: log.actor_id ?? '',
-    actorName: log.actor_name ?? '',
-    actorRole: log.actor_role ?? '',
-    timestamp: log.timestamp ?? new Date().toISOString(),
-    summary: log.summary ?? '',
-    changes: changes
-      .filter((change) => change.log_id === log.id)
-      .map((change) => ({
-        field: change.field,
-        before: change.before ?? '',
-        after: change.after ?? '',
-      })),
-  }));
-}
-
-async function seedSupabaseIfEmpty() {
-  const { count, error } = await supabase
-    .from('wiki_pages')
-    .select('*', { count: 'exact', head: true });
-
-  if (error) throw error;
-  if ((count ?? 0) > 0) return;
-
-  const seedPages = [...seedData.sections, ...seedData.people].map((page) => ({
-    id: page.id,
-    title: page.title,
-    summary: page.summary,
-    content: page.content,
-    category: page.category ?? null,
-    icon: page.icon ?? null,
-    group: page.group ?? null,
-    team: page.team ?? null,
-    updated_at: page.updatedAt,
-    updated_by: page.updatedBy,
-  }));
-
-  const { error: insertPagesError } = await supabase
-    .from('wiki_pages')
-    .insert(seedPages);
-
-  if (insertPagesError) throw insertPagesError;
-
-  const seedLogs = seedData.auditLogs.map((log) => ({
-    id: log.id,
-    page_id: log.pageId,
-    page_title: log.pageTitle,
-    action: log.action,
-    actor_id: log.actorId,
-    actor_name: log.actorName,
-    actor_role: log.actorRole,
-    timestamp: log.timestamp,
-    summary: log.summary,
-  }));
-
-  const { error: insertLogsError } = await supabase
-    .from('audit_logs')
-    .insert(seedLogs);
-
-  if (insertLogsError) throw insertLogsError;
-}
-
-async function loadDataFromSupabase(): Promise<WikiData> {
-  await seedSupabaseIfEmpty();
-
-  const [{ data: pageRows, error: pageError }, { data: logRows, error: logError }, { data: changeRows, error: changeError }] =
-    await Promise.all([
-      supabase.from('wiki_pages').select('*').order('id'),
-      supabase.from('audit_logs').select('*').order('timestamp', { ascending: true }),
-      supabase.from('audit_changes').select('*').order('id', { ascending: true }),
-    ]);
-
-  if (pageError) throw pageError;
-  if (logError) throw logError;
-  if (changeError) throw changeError;
-
-  const pages = ((pageRows ?? []) as WikiPageRow[]).map(mapRowToWikiPage);
-
-  return {
-    people: pages.filter((page) => page.category === '사람 문서'),
-    sections: pages.filter((page) => page.category !== '사람 문서'),
-    auditLogs: mapAuditRows(
-      (logRows ?? []) as AuditLogRow[],
-      (changeRows ?? []) as AuditChangeRow[],
-    ),
-  };
-}
-
-async function savePageToSupabase(page: WikiPage) {
-  const { error } = await supabase.from('wiki_pages').upsert({
-    id: page.id,
-    title: page.title,
-    summary: page.summary,
-    content: page.content,
-    category: page.category ?? null,
-    icon: page.icon ?? null,
-    group: page.group ?? null,
-    team: page.team ?? null,
-    updated_at: page.updatedAt,
-    updated_by: page.updatedBy,
-  });
-
-  if (error) throw error;
-}
-
-async function saveAuditLogToSupabase(log: AuditLog) {
-  const { changes = [], ...rest } = log;
-
-  const { error: logError } = await supabase.from('audit_logs').insert({
-    id: rest.id,
-    page_id: rest.pageId,
-    page_title: rest.pageTitle,
-    action: rest.action,
-    actor_id: rest.actorId,
-    actor_name: rest.actorName,
-    actor_role: rest.actorRole,
-    timestamp: rest.timestamp,
-    summary: rest.summary,
-  });
-
-  if (logError) throw logError;
-
-  if (changes.length > 0) {
-    const { error: changesError } = await supabase.from('audit_changes').insert(
-      changes.map((change) => ({
-        log_id: rest.id,
-        field: change.field,
-        before: change.before,
-        after: change.after,
-      })),
-    );
-
-    if (changesError) throw changesError;
-  }
-}
+const SESSION_KEY = 'yulturn-wiki-session-v1';
+const ADMIN_PAGE_ID = 'admin-dashboard';
+const nowIso = new Date().toISOString();
 
 const TEAM_ORDER: TeamKey[] = [
   '회계팀',
@@ -510,9 +221,6 @@ const USER_TEAM_MAP: Partial<Record<string, TeamKey>> = {
   정성태: '인프라보안팀',
   조민정: '지식관리팀',
 };
-
-const ADMIN_PAGE_ID = 'admin-dashboard';
-const nowIso = new Date().toISOString();
 
 function buildPersonPages(): WikiPage[] {
   return HARD_CODED_USERS.filter((user) => !user.isAdmin).map((user) => {
@@ -1074,6 +782,165 @@ function isBrowser() {
   return typeof window !== 'undefined';
 }
 
+function mapRowToWikiPage(row: WikiPageRow): WikiPage {
+  return {
+    id: row.id,
+    title: row.title,
+    summary: row.summary ?? '',
+    content: row.content ?? '',
+    category: row.category ?? undefined,
+    icon: row.icon ?? undefined,
+    group: row.group ?? undefined,
+    team: (row.team as TeamKey | null) ?? undefined,
+    updatedAt: row.updated_at ?? new Date().toISOString(),
+    updatedBy: row.updated_by ?? 'system',
+  };
+}
+
+function mapAuditRows(logs: AuditLogRow[], changes: AuditChangeRow[]): AuditLog[] {
+  return logs.map((log) => ({
+    id: log.id,
+    pageId: log.page_id,
+    pageTitle: log.page_title ?? '',
+    action: log.action,
+    actorId: log.actor_id ?? '',
+    actorName: log.actor_name ?? '',
+    actorRole: log.actor_role ?? '',
+    timestamp: log.timestamp ?? new Date().toISOString(),
+    summary: log.summary ?? '',
+    changes: changes
+      .filter((change) => change.log_id === log.id)
+      .map((change) => ({
+        field: change.field,
+        before: change.before ?? '',
+        after: change.after ?? '',
+      })),
+  }));
+}
+
+async function seedSupabaseIfEmpty() {
+  const { count, error } = await supabase
+    .from('wiki_pages')
+    .select('*', { count: 'exact', head: true });
+
+  if (error) throw error;
+  if ((count ?? 0) > 0) return;
+
+  const seedPages = [...seedData.sections, ...seedData.people].map((page) => ({
+    id: page.id,
+    title: page.title,
+    summary: page.summary,
+    content: page.content,
+    category: page.category ?? null,
+    icon: page.icon ?? null,
+    group: page.group ?? null,
+    team: page.team ?? null,
+    updated_at: page.updatedAt,
+    updated_by: page.updatedBy,
+  }));
+
+  const { error: insertPagesError } = await supabase
+    .from('wiki_pages')
+    .insert(seedPages);
+
+  if (insertPagesError) throw insertPagesError;
+
+  const seedLogs = seedData.auditLogs.map((log) => ({
+    id: log.id,
+    page_id: log.pageId,
+    page_title: log.pageTitle,
+    action: log.action,
+    actor_id: log.actorId,
+    actor_name: log.actorName,
+    actor_role: log.actorRole,
+    timestamp: log.timestamp,
+    summary: log.summary,
+  }));
+
+  const { error: insertLogsError } = await supabase
+    .from('audit_logs')
+    .insert(seedLogs);
+
+  if (insertLogsError) throw insertLogsError;
+}
+
+async function loadDataFromSupabase(): Promise<WikiData> {
+  await seedSupabaseIfEmpty();
+
+  const [
+    { data: pageRows, error: pageError },
+    { data: logRows, error: logError },
+    { data: changeRows, error: changeError },
+  ] = await Promise.all([
+    supabase.from('wiki_pages').select('*').order('id'),
+    supabase.from('audit_logs').select('*').order('timestamp', { ascending: true }),
+    supabase.from('audit_changes').select('*').order('id', { ascending: true }),
+  ]);
+
+  if (pageError) throw pageError;
+  if (logError) throw logError;
+  if (changeError) throw changeError;
+
+  const pages = ((pageRows ?? []) as WikiPageRow[]).map(mapRowToWikiPage);
+
+  return {
+    people: pages.filter((page) => page.category === '사람 문서'),
+    sections: pages.filter((page) => page.category !== '사람 문서'),
+    auditLogs: mapAuditRows(
+      (logRows ?? []) as AuditLogRow[],
+      (changeRows ?? []) as AuditChangeRow[],
+    ),
+  };
+}
+
+async function savePageToSupabase(page: WikiPage) {
+  const { error } = await supabase.from('wiki_pages').upsert({
+    id: page.id,
+    title: page.title,
+    summary: page.summary,
+    content: page.content,
+    category: page.category ?? null,
+    icon: page.icon ?? null,
+    group: page.group ?? null,
+    team: page.team ?? null,
+    updated_at: page.updatedAt,
+    updated_by: page.updatedBy,
+  });
+
+  if (error) throw error;
+}
+
+async function saveAuditLogToSupabase(log: AuditLog) {
+  const { changes = [], ...rest } = log;
+
+  const { error: logError } = await supabase.from('audit_logs').insert({
+    id: rest.id,
+    page_id: rest.pageId,
+    page_title: rest.pageTitle,
+    action: rest.action,
+    actor_id: rest.actorId,
+    actor_name: rest.actorName,
+    actor_role: rest.actorRole,
+    timestamp: rest.timestamp,
+    summary: rest.summary,
+  });
+
+  if (logError) throw logError;
+
+  if (changes.length > 0) {
+    const { error: changesError } = await supabase.from('audit_changes').insert(
+      changes.map((change) => ({
+        log_id: rest.id,
+        field: change.field,
+        before: change.before,
+        after: change.after,
+      })),
+    );
+
+    if (changesError) throw changesError;
+  }
+}
+
 function formatDate(value: string) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return '';
@@ -1085,7 +952,6 @@ function formatDate(value: string) {
     minute: '2-digit',
   });
 }
-
 
 function loadSession(): UserAccount | null {
   if (!isBrowser()) return null;
@@ -1153,16 +1019,7 @@ function getStyledClasses(styleTag: string) {
   }
 }
 
-const STYLE_TAGS = [
-  'red',
-  'green',
-  'blue',
-  'bold',
-  'big',
-  'huge',
-  'strike',
-] as const;
-
+const STYLE_TAGS = ['red', 'green', 'blue', 'bold', 'big', 'huge', 'strike'] as const;
 type StyleTag = (typeof STYLE_TAGS)[number];
 
 function findMatchingClosingTag(text: string, tag: StyleTag, fromIndex: number) {
@@ -1185,9 +1042,7 @@ function findMatchingClosingTag(text: string, tag: StyleTag, fromIndex: number) 
     }
 
     depth -= 1;
-    if (depth === 0) {
-      return nextClose;
-    }
+    if (depth === 0) return nextClose;
 
     cursor = nextClose + closeToken.length;
   }
@@ -1342,11 +1197,7 @@ function renderWikiText(
             );
           }
 
-          return (
-            <li key={`${item}-${idx}`}>
-              {parseStyledInline(item, onNavigate)}
-            </li>
-          );
+          return <li key={`${item}-${idx}`}>{parseStyledInline(item, onNavigate)}</li>;
         })}
       </ul>,
     );
@@ -1459,9 +1310,7 @@ function LoginScreen({ onLogin }: { onLogin: (user: UserAccount) => void }) {
               <div className="text-5xl font-extrabold tracking-[-0.04em] text-white">
                 율턴위키
               </div>
-              <div className="mt-2 text-sm text-white/75">
-                율촌 인턴 내부 위키
-              </div>
+              <div className="mt-2 text-sm text-white/75">율촌 인턴 내부 위키</div>
             </div>
 
             <div className="max-w-2xl rounded-[28px] border border-white/10 bg-white/10 p-8 text-white shadow-2xl backdrop-blur-md">
@@ -1489,9 +1338,7 @@ function LoginScreen({ onLogin }: { onLogin: (user: UserAccount) => void }) {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">로그인</h2>
-                <p className="text-sm text-slate-500">
-                  허용된 계정만 접근 가능합니다.
-                </p>
+                <p className="text-sm text-slate-500">허용된 계정만 접근 가능합니다.</p>
               </div>
             </div>
 
@@ -1557,9 +1404,7 @@ function SearchBox({
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      if (!wrapperRef.current?.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      if (!wrapperRef.current?.contains(e.target as Node)) setOpen(false);
     };
 
     document.addEventListener('mousedown', onClick);
@@ -1604,9 +1449,7 @@ function SearchBox({
       {open && search.trim() ? (
         <div className="absolute left-0 right-0 top-[46px] z-30 max-h-80 overflow-y-auto rounded-b border border-t-0 border-[#d8d8d8] bg-white shadow-lg">
           {results.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-[#777]">
-              검색 결과가 없습니다.
-            </div>
+            <div className="px-4 py-3 text-sm text-[#777]">검색 결과가 없습니다.</div>
           ) : (
             results.slice(0, 8).map((page) => (
               <button
@@ -1618,9 +1461,7 @@ function SearchBox({
                 }}
                 className="block w-full border-b border-[#f0f0f0] px-4 py-3 text-left hover:bg-[#f8fbfe] last:border-b-0"
               >
-                <div className="text-sm font-semibold text-[#243b53]">
-                  {page.title}
-                </div>
+                <div className="text-sm font-semibold text-[#243b53]">{page.title}</div>
                 <div className="mt-1 text-xs text-[#66788a]">{page.summary}</div>
               </button>
             ))
@@ -1856,18 +1697,14 @@ function EditorImageTools({
           const reader = new FileReader();
           reader.onload = () => {
             const result = reader.result;
-            if (typeof result === 'string') {
-              onAppendImage(result);
-            }
+            if (typeof result === 'string') onAppendImage(result);
           };
           reader.readAsDataURL(file);
           e.currentTarget.value = '';
         }}
       />
 
-      <div className="text-xs text-[#777]">
-        업로드한 사진은 문서 본문에 바로 들어갑니다.
-      </div>
+      <div className="text-xs text-[#777]">업로드한 사진은 문서 본문에 바로 들어갑니다.</div>
     </div>
   );
 }
@@ -1881,19 +1718,12 @@ function wrapSelection(
   const end = textarea.selectionEnd;
   const selected = textarea.value.slice(start, end);
   const nextValue =
-    textarea.value.slice(0, start) +
-    before +
-    selected +
-    after +
-    textarea.value.slice(end);
-
-  const selectionStart = start + before.length;
-  const selectionEnd = end + before.length;
+    textarea.value.slice(0, start) + before + selected + after + textarea.value.slice(end);
 
   return {
     value: nextValue,
-    selectionStart,
-    selectionEnd,
+    selectionStart: start + before.length,
+    selectionEnd: end + before.length,
   };
 }
 
@@ -1912,10 +1742,7 @@ function EditorStyleToolbar({
 
     setDraft((prev) => {
       if (!prev) return prev;
-      return {
-        ...prev,
-        content: result.value,
-      };
+      return { ...prev, content: result.value };
     });
 
     requestAnimationFrame(() => {
@@ -2002,27 +1829,13 @@ function buildAuditChanges(before: WikiPage, after: WikiPage): AuditChange[] {
   const changes: AuditChange[] = [];
 
   if (before.title !== after.title) {
-    changes.push({
-      field: 'title',
-      before: before.title,
-      after: after.title,
-    });
+    changes.push({ field: 'title', before: before.title, after: after.title });
   }
-
   if (before.summary !== after.summary) {
-    changes.push({
-      field: 'summary',
-      before: before.summary,
-      after: after.summary,
-    });
+    changes.push({ field: 'summary', before: before.summary, after: after.summary });
   }
-
   if (before.content !== after.content) {
-    changes.push({
-      field: 'content',
-      before: before.content,
-      after: after.content,
-    });
+    changes.push({ field: 'content', before: before.content, after: after.content });
   }
 
   return changes;
@@ -2098,17 +1911,13 @@ function AdminAuditPanel({
                       </div>
                       <div className="grid gap-3 md:grid-cols-2">
                         <div>
-                          <div className="mb-1 text-xs font-semibold text-[#999]">
-                            수정 전
-                          </div>
+                          <div className="mb-1 text-xs font-semibold text-[#999]">수정 전</div>
                           <div className="rounded border border-[#eee] bg-white px-3 py-2 text-sm text-[#555]">
                             {getChangePreview(change.before)}
                           </div>
                         </div>
                         <div>
-                          <div className="mb-1 text-xs font-semibold text-[#999]">
-                            수정 후
-                          </div>
+                          <div className="mb-1 text-xs font-semibold text-[#999]">수정 후</div>
                           <div className="rounded border border-[#eee] bg-white px-3 py-2 text-sm text-[#555]">
                             {getChangePreview(change.after)}
                           </div>
@@ -2210,17 +2019,11 @@ function WikiArticle({
         ) : !editing || !draft ? (
           <>
             <TocBox toc={toc} />
-
             <div className="text-[15px] leading-8 text-[#444]">
               {renderWikiText(page.content, onNavigate)}
             </div>
-
             {teamKey ? (
-              <TeamMembersBlock
-                people={people}
-                team={teamKey}
-                onNavigate={onNavigate}
-              />
+              <TeamMembersBlock people={people} team={teamKey} onNavigate={onNavigate} />
             ) : null}
           </>
         ) : (
@@ -2232,9 +2035,7 @@ function WikiArticle({
             ) : null}
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-[#444]">
-                제목
-              </label>
+              <label className="mb-2 block text-sm font-medium text-[#444]">제목</label>
               <input
                 value={draft.title}
                 onChange={(e) =>
@@ -2245,15 +2046,11 @@ function WikiArticle({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-[#444]">
-                요약
-              </label>
+              <label className="mb-2 block text-sm font-medium text-[#444]">요약</label>
               <textarea
                 value={draft.summary}
                 onChange={(e) =>
-                  setDraft((prev) =>
-                    prev ? { ...prev, summary: e.target.value } : prev,
-                  )
+                  setDraft((prev) => (prev ? { ...prev, summary: e.target.value } : prev))
                 }
                 rows={3}
                 className="w-full rounded border border-[#ccc] px-3 py-2 outline-none focus:border-[#0b3f79]"
@@ -2261,24 +2058,14 @@ function WikiArticle({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-[#444]">
-                본문
-              </label>
+              <label className="mb-2 block text-sm font-medium text-[#444]">본문</label>
 
-              <EditorStyleToolbar
-                textareaRef={textareaRef}
-                setDraft={setDraft}
-              />
+              <EditorStyleToolbar textareaRef={textareaRef} setDraft={setDraft} />
 
               <EditorImageTools
                 onAppendImage={(dataUrl) =>
                   setDraft((prev) =>
-                    prev
-                      ? {
-                          ...prev,
-                          content: `${prev.content}\n\n{{image:${dataUrl}}}`,
-                        }
-                      : prev,
+                    prev ? { ...prev, content: `${prev.content}\n\n{{image:${dataUrl}}}` } : prev,
                   )
                 }
               />
@@ -2287,17 +2074,15 @@ function WikiArticle({
                 ref={textareaRef}
                 value={draft.content}
                 onChange={(e) =>
-                  setDraft((prev) =>
-                    prev ? { ...prev, content: e.target.value } : prev,
-                  )
+                  setDraft((prev) => (prev ? { ...prev, content: e.target.value } : prev))
                 }
                 rows={22}
                 className="w-full rounded border border-[#ccc] px-3 py-2 font-mono text-sm outline-none focus:border-[#0b3f79]"
               />
 
               <p className="mt-2 text-xs text-[#777]">
-                문서 링크는 [[page-id|보이는이름]] 형식, 스타일 버튼은 선택한
-                텍스트를 [red][/red], [big][/big], [strike][/strike] 같은 태그로 감쌉니다.
+                문서 링크는 [[page-id|보이는이름]] 형식, 스타일 버튼은 선택한 텍스트를
+                [red][/red], [big][/big], [strike][/strike] 같은 태그로 감쌉니다.
               </p>
             </div>
           </div>
@@ -2307,8 +2092,6 @@ function WikiArticle({
   );
 }
 
-
-
 export default function YulturnWikiPrototype() {
   const [sessionUser, setSessionUser] = useState<UserAccount | null>(null);
   const [data, setData] = useState<WikiData>(seedData);
@@ -2317,48 +2100,31 @@ export default function YulturnWikiPrototype() {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<WikiPage | null>(null);
   const [history, setHistory] = useState<string[]>([]);
-
   const [loading, setLoading] = useState(true);
 
-  if (loading) {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      불러오는 중...
-    </div>
-  );
-}
+  useEffect(() => {
+    let mounted = true;
 
-useEffect(() => {
-  let mounted = true;
+    const init = async () => {
+      try {
+        const loadedData = await loadDataFromSupabase();
+        if (mounted) setData(loadedData);
+      } catch (error) {
+        console.error('Supabase load error:', error);
+        if (mounted) setData(seedData);
+      } finally {
+        const loadedSession = loadSession();
+        if (mounted && loadedSession) setSessionUser(loadedSession);
+        if (mounted) setLoading(false);
+      }
+    };
 
-  const init = async () => {
-    try {
-      const loadedData = await loadDataFromSupabase(); // 🔥 여기 핵심
-      if (mounted) {
-        setData(loadedData);
-      }
-    } catch (error) {
-      console.error('Supabase load error:', error);
-      if (mounted) {
-        setData(seedData); // fallback
-      }
-    } finally {
-      const loadedSession = loadSession();
-      if (mounted && loadedSession) {
-        setSessionUser(loadedSession);
-      }
-      if (mounted) {
-        setLoading(false);
-      }
-    }
-  };
+    init();
 
-  init();
-
-  return () => {
-    mounted = false;
-  };
-}, []);
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const allPages = useMemo<WikiPage[]>(() => {
     const peoplePages = data.people.map((item) => ({
@@ -2401,11 +2167,8 @@ useEffect(() => {
 
   useEffect(() => {
     if (!allPages.length) return;
-
     const exists = allPages.some((page) => page.id === selectedId);
-    if (!exists) {
-      setSelectedId('main');
-    }
+    if (!exists) setSelectedId('main');
   }, [allPages, selectedId]);
 
   useEffect(() => {
@@ -2415,9 +2178,7 @@ useEffect(() => {
   }, [selectedPage]);
 
   const navigateTo = (pageId: string) => {
-    if (pageId === ADMIN_PAGE_ID && !sessionUser?.isAdmin) {
-      return;
-    }
+    if (pageId === ADMIN_PAGE_ID && !sessionUser?.isAdmin) return;
 
     const exists = allPages.some((page) => page.id === pageId);
     if (!exists) return;
@@ -2485,7 +2246,7 @@ useEffect(() => {
     setSelectedId('main');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!draft || !sessionUser || !selectedPage) return;
     if (draft.id === ADMIN_PAGE_ID && !sessionUser.isAdmin) return;
 
@@ -2511,24 +2272,30 @@ useEffect(() => {
       changes,
     );
 
-    const isPerson = data.people.some((item) => item.id === next.id);
+    try {
+      await savePageToSupabase(next);
+      if (log) await saveAuditLogToSupabase(log);
 
-    const updated: WikiData = isPerson
-      ? {
-          ...data,
-          people: data.people.map((item) => (item.id === next.id ? next : item)),
-          auditLogs: log ? [...data.auditLogs, log] : data.auditLogs,
-        }
-      : {
-          ...data,
-          sections: data.sections.map((item) =>
-            item.id === next.id ? next : item,
-          ),
-          auditLogs: log ? [...data.auditLogs, log] : data.auditLogs,
-        };
+      const isPerson = data.people.some((item) => item.id === next.id);
 
-    setData(updated);
-    setEditing(false);
+      const updated: WikiData = isPerson
+        ? {
+            ...data,
+            people: data.people.map((item) => (item.id === next.id ? next : item)),
+            auditLogs: log ? [...data.auditLogs, log] : data.auditLogs,
+          }
+        : {
+            ...data,
+            sections: data.sections.map((item) => (item.id === next.id ? next : item)),
+            auditLogs: log ? [...data.auditLogs, log] : data.auditLogs,
+          };
+
+      setData(updated);
+      setEditing(false);
+    } catch (error) {
+      console.error('Supabase save error:', error);
+      window.alert('저장 중 오류가 발생했습니다.');
+    }
   };
 
   const handleShare = async () => {
@@ -2545,6 +2312,14 @@ useEffect(() => {
   };
 
   const canGoBack = history.length > 0;
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#efefef] text-[#333]">
+        불러오는 중...
+      </div>
+    );
+  }
 
   if (!sessionUser) {
     return <LoginScreen onLogin={handleLogin} />;
@@ -2591,9 +2366,7 @@ useEffect(() => {
               ) : null}
             </>
           ) : (
-            <div className="rounded border border-[#ddd] bg-white p-8">
-              문서를 선택하세요.
-            </div>
+            <div className="rounded border border-[#ddd] bg-white p-8">문서를 선택하세요.</div>
           )}
         </div>
 
