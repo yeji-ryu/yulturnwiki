@@ -221,7 +221,10 @@ const USER_TEAM_MAP: Partial<Record<string, TeamKey>> = {
   정도연: '업무지원팀',
   정성태: '리서치팀',
   조민정: '업무지원팀',
-  원혁진: '회계팀'
+  원혁진: '회계팀',
+  전승: '빌링팀',
+  유지오: '빌링팀',
+  최은주: '빌링팀'
 };
 
 function buildPersonPages(): WikiPage[] {
@@ -861,6 +864,16 @@ async function loadDataFromSupabase(): Promise<WikiData> {
   if (changeError) throw changeError;
 
   const pages = ((pageRows ?? []) as WikiPageRow[]).map(mapRowToWikiPage);
+
+  console.log(
+  'LOAD DATA DEBUG',
+  pages.map((page) => ({
+    id: page.id,
+    title: page.title,
+    category: page.category,
+    team: page.team,
+  }))
+);
 
   return {
     people: pages.filter((page) => page.category === '사람 문서'),
@@ -1692,6 +1705,12 @@ function TeamMembersBlock({
   team: TeamKey;
   onNavigate: (pageId: string) => void;
 }) {
+
+  console.log('TEAM MEMBERS DEBUG', {
+  team,
+  people: people.map((p) => ({ id: p.id, title: p.title, team: p.team, category: p.category })),
+  matched: people.filter((p) => p.team === team).map((p) => p.title),
+});
   const members = people.filter((person) => person.team === team);
 
   return (
