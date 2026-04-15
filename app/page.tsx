@@ -358,6 +358,26 @@ function buildPersonPage(user: UserAccount): WikiPage {
   };
 }
 
+function buildInternIndexContent(users: UserAccount[]) {
+  const members = users
+    .filter((user) => !user.isAdmin)
+    .sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+
+  return `[2026 상반기 인턴]
+2026 상반기 인턴 전체 문서입니다.
+
+[팀별 이동]
+${TEAM_DEFINITIONS.map((team) => `- [[${team.pageId}|${team.key}]]`).join('\n')}
+
+[구성원]
+${members.map((user) => `- [[${user.id}|${user.name}]]`).join('\n')}
+
+[안내]
+- 팀 이름을 누르면 팀 소개 화면으로 이동합니다.
+- 팀 소개 문서에서 구성원 이름을 눌러 개인 문서로 이동할 수 있습니다.
+- 구성원 추가/수정은 관리자 페이지에서 가능합니다.`;
+}
+
 function buildBaseSections(): WikiPage[] {
   const baseTime = nowIso();
 
@@ -547,14 +567,18 @@ function createInitialState(): { wikiData: WikiData; users: UserAccount[] } {
   const timestamp = nowIso();
 
   const users: UserAccount[] = INITIAL_USERS.map((user) => ({
-    ...user,
-    id: uuid(),
-    createdAt: timestamp,
-    updatedAt: timestamp,
-  }));
+  ...user,
+  id: uuid(),
+  createdAt: timestamp,
+  updatedAt: timestamp,
+}));
 
-  const people = users.filter((user) => !user.isAdmin).map(buildPersonPage);
-  const sections = buildBaseSections();
+const people = users.filter((user) => !user.isAdmin).map(buildPersonPage);
+const sections = buildBaseSections().map((section) =>
+  section.id === INTERN_INDEX_PAGE_ID
+    ? { ...section, content: buildInternIndexContent(users) }
+    : section,
+);
 
   const auditLogs: AuditLog[] = [
     {
@@ -1533,7 +1557,9 @@ function WikiArticle({
             <div>
               <div className="mb-6 text-[15px] text-[#666]">최근 수정: {formatDate(page.updatedAt)} · {page.updatedByName ?? page.updatedBy}</div>
               <div className="prose max-w-none prose-p:my-0">{renderWikiText(page.content, onNavigate)}</div>
-              {page.team ? <TeamMembersBlock people={people} team={page.team} onNavigate={onNavigate} /> : null}
+              {page.category === '팀 문서' && page.team ? (
+                  <TeamMembersBlock people={people} team={page.team} onNavigate={onNavigate} />
+                ) : null}
             </div>
           )}
         </div>
