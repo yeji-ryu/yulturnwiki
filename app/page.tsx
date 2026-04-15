@@ -969,7 +969,15 @@ function loadSession(): UserAccount | null {
       (user) => user.id === parsed.id && user.password === parsed.password,
     );
 
-    return matched ?? null;
+    if (!matched) return null;
+
+    return {
+      ...matched,
+      dbId: parsed.dbId,
+      name: parsed.name ?? matched.name,
+      role: parsed.role ?? matched.role,
+      isAdmin: parsed.isAdmin ?? matched.isAdmin,
+    };
   } catch (error) {
     console.error('loadSession error:', error);
     return null;
