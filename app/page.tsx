@@ -872,19 +872,31 @@ async function addOrUpdateUser(params: {
   let row: WikiUserRow;
 
   if (params.mode === 'create') {
-    const { data, error } = await supabase.from('wiki_users').insert(payload).select('*').single();
-    if (error) throw error;
-    row = data as WikiUserRow;
-  } else {
-    const { data, error } = await supabase
-      .from('wiki_users')
-      .update(payload)
-      .eq('id', params.user.id!)
-      .select('*')
-      .single();
-    if (error) throw error;
-    row = data as WikiUserRow;
-  }
+  const newUserId = crypto.randomUUID(); // ⭐ 핵심
+
+  const { data, error } = await supabase
+    .from('wiki_users')
+    .insert({
+      id: newUserId,
+      ...payload,
+    })
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  row = data as WikiUserRow;
+
+} else {
+  const { data, error } = await supabase
+    .from('wiki_users')
+    .update(payload)
+    .eq('id', params.user.id!)
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  row = data as WikiUserRow;
+}
 
   const savedUser = mapUserRow(row);
   await ensurePersonPage(savedUser, params.teams);
