@@ -138,6 +138,9 @@ const HARD_CODED_USERS: UserAccount[] = [
   { id: '정성태', password: '0015', name: '정성태', role: '인턴', isAdmin: false },
   { id: '조민정', password: '1092', name: '조민정', role: '인턴', isAdmin: false },
   { id: '원혁진', password: '2060', name: '원혁진', role: '인턴', isAdmin: false },
+  { id: '전승', password: '2131', name: '전승', role: '인턴', isAdmin: false },
+  { id: '유지오', password: '2051', name: '유지오', role: '인턴', isAdmin: false },
+  { id: '최은주', password: '3096', name: '최은주', role: '인턴', isAdmin: false },
   { id: 'admin', password: '123', name: '운영자', role: '관리자', isAdmin: true },
 ];
 
