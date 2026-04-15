@@ -20,11 +20,12 @@ import {
 import { supabase } from '@/lib/supabase';
 
 type UserAccount = {
-  id: string;
+  id: string;        // 로그인용 아이디
   password: string;
   name: string;
   role: string;
   isAdmin: boolean;
+  dbId?: string;     // wiki_users.id (UUID)
 };
 
 type TeamKey =
@@ -1304,21 +1305,39 @@ function LoginScreen({ onLogin }: { onLogin: (user: UserAccount) => void }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    const found = HARD_CODED_USERS.find(
-      (u) => u.id === id.trim() && u.password === password,
-    );
+  const found = HARD_CODED_USERS.find(
+    (u) => u.id === id.trim() && u.password === password,
+  );
 
-    if (!found) {
-      setError('아이디 또는 비밀번호가 올바르지 않습니다.');
-      return;
-    }
+  if (!found) {
+    setError('아이디 또는 비밀번호가 올바르지 않습니다.');
+    return;
+  }
 
-    setError('');
-    onLogin(found);
-  };
+  const { data: dbUser, error: dbError } = await supabase
+    .from('wiki_users')
+    .select('id, login_id, name, role, is_admin')
+    .eq('login_id', found.id)
+    .single();
+
+  if (dbError || !dbUser) {
+    console.error('wiki_users lookup error:', dbError);
+    setError('DB 사용자 정보를 찾을 수 없습니다.');
+    return;
+  }
+
+  setError('');
+  onLogin({
+    ...found,
+    dbId: dbUser.id,
+    name: dbUser.name ?? found.name,
+    role: dbUser.role ?? found.role,
+    isAdmin: dbUser.is_admin ?? found.isAdmin,
+  });
+};
 
   return (
     <div className="min-h-screen bg-[#0b3f79]">
@@ -2297,7 +2316,7 @@ useEffect(() => {
       pageId,
       pageTitle,
       action,
-      actorId: sessionUser.id,
+      actorId: sessionUser.dbId ?? sessionUser.id,
       actorName: sessionUser.name,
       actorRole: sessionUser.isAdmin ? '관리자' : '일반',
       timestamp: new Date().toISOString(),
@@ -2332,7 +2351,7 @@ useEffect(() => {
   const next: WikiPage = {
     ...draft,
     updatedAt: new Date().toISOString(),
-    updatedBy: sessionUser.name,
+    updatedBy: sessionUser.dbId ?? sessionUser.id,
   };
 
   const changes = buildAuditChanges(original, next);
