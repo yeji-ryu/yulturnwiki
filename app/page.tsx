@@ -175,7 +175,7 @@ const TEAM_PAGE_MAP: Record<TeamKey, string> = {
   인재개발팀: 'team-hr-development',
   급여팀: 'team-payroll',
   인프라보안팀: 'team-infosec',
-  경영인프라팀: 'team-bd-infra',
+  경영인프라팀: 'team-management-infra',
   법무지원팀: 'team-legal-support',
   고객지원팀: 'team-customer-support',
   전략기획실: 'team-strategy',
@@ -192,7 +192,7 @@ const TEAM_ID_TO_KEY: Record<string, TeamKey> = {
   'team-hr-development': '인재개발팀',
   'team-payroll': '급여팀',
   'team-infosec': '인프라보안팀',
-  'team-bd-infra': '경영인프라팀',
+  'team-management-infra': '경영인프라팀',
   'team-legal-support': '법무지원팀',
   'team-customer-support': '고객지원팀',
   'team-strategy': '전략기획실',
@@ -305,7 +305,7 @@ const seedData: WikiData = {
 - [[team-hr-development|인재개발팀]]
 - [[team-payroll|급여팀]]
 - [[team-infosec|인프라보안팀]]
-- [[team-bd-infra|경영인프라팀]]
+- [[team-management-infra|경영인프라팀]]
 - [[team-legal-support|법무지원팀]]
 - [[team-customer-support|고객지원팀]]
 - [[team-strategy|전략기획실]]
@@ -541,7 +541,7 @@ const seedData: WikiData = {
       updatedBy: 'system',
     },
     {
-      id: 'team-bd-infra',
+      id: 'team-management-infra',
       title: '경영인프라팀',
       category: '팀 문서',
       icon: 'people',
