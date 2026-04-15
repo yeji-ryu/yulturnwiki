@@ -37,7 +37,7 @@ type TeamKey =
   | '인재개발팀'
   | '급여팀'
   | '인프라보안팀'
-  | 'BD인프라팀'
+  | '경영인프라팀'
   | '법무지원팀'
   | '고객지원팀'
   | '전략기획실'
@@ -154,7 +154,7 @@ const TEAM_ORDER: TeamKey[] = [
   '인재개발팀',
   '급여팀',
   '인프라보안팀',
-  'BD인프라팀',
+  '경영인프라팀',
   '법무지원팀',
   '고객지원팀',
   '전략기획실',
@@ -171,7 +171,7 @@ const TEAM_PAGE_MAP: Record<TeamKey, string> = {
   인재개발팀: 'team-hr-development',
   급여팀: 'team-payroll',
   인프라보안팀: 'team-infosec',
-  BD인프라팀: 'team-bd-infra',
+  경영인프라팀: 'team-bd-infra',
   법무지원팀: 'team-legal-support',
   고객지원팀: 'team-customer-support',
   전략기획실: 'team-strategy',
@@ -188,7 +188,7 @@ const TEAM_ID_TO_KEY: Record<string, TeamKey> = {
   'team-hr-development': '인재개발팀',
   'team-payroll': '급여팀',
   'team-infosec': '인프라보안팀',
-  'team-bd-infra': 'BD인프라팀',
+  'team-bd-infra': '경영인프라팀',
   'team-legal-support': '법무지원팀',
   'team-customer-support': '고객지원팀',
   'team-strategy': '전략기획실',
@@ -209,7 +209,7 @@ const USER_TEAM_MAP: Partial<Record<string, TeamKey>> = {
   연제민: '급여팀',
   유예지: '인프라보안팀',
   이수하: '인재개발팀',
-  이예원: 'BD인프라팀',
+  이예원: '경영인프라팀',
   이재희: '법무지원팀',
   이채영: '업무지원팀',
   이초원: '고객지원팀',
@@ -298,7 +298,7 @@ const seedData: WikiData = {
 - [[team-hr-development|인재개발팀]]
 - [[team-payroll|급여팀]]
 - [[team-infosec|인프라보안팀]]
-- [[team-bd-infra|BD인프라팀]]
+- [[team-bd-infra|경영인프라팀]]
 - [[team-legal-support|법무지원팀]]
 - [[team-customer-support|고객지원팀]]
 - [[team-strategy|전략기획실]]
@@ -535,12 +535,12 @@ const seedData: WikiData = {
     },
     {
       id: 'team-bd-infra',
-      title: 'BD인프라팀',
+      title: '경영인프라팀',
       category: '팀 문서',
       icon: 'people',
-      summary: '2026 상반기 BD인프라팀 소개 문서',
+      summary: '2026 상반기 경영인프라팀 소개 문서',
       content: `[팀 소개]
-BD인프라팀은 비즈니스 인프라 구축을 담당합니다.
+경영인프라팀은 비즈니스 인프라 구축을 담당합니다.
 
 [분위기]
 - 협업 중요
@@ -840,55 +840,8 @@ async function seedSupabaseIfEmpty() {
   if (insertLogsError) throw insertLogsError;
 }
 
-async function syncFixedPagesToSupabase() {
-  const fixedPageIds = new Set([
-    'main',
-    'interns-2026h1',
-    'team-accounting',
-    'team-billing',
-    'team-knowledge',
-    'team-education',
-    'team-people',
-    'team-support',
-    'team-marketing',
-    'team-hr-development',
-    'team-payroll',
-    'team-infosec',
-    'team-bd-infra',
-    'team-legal-support',
-    'team-customer-support',
-    'team-strategy',
-    'team-research',
-    'operating-rules',
-    ADMIN_PAGE_ID,
-  ]);
-
-  const fixedPages = [...seedData.sections, ...seedData.people]
-    .filter((page) => fixedPageIds.has(page.id))
-    .map((page) => ({
-      id: page.id,
-      title: page.title,
-      summary: page.summary,
-      content: page.content,
-      category: page.category ?? null,
-      icon: page.icon ?? null,
-      group: page.group ?? null,
-      team: page.team ?? null,
-      updated_at: page.updatedAt,
-      updated_by: page.updatedBy,
-    }));
-
-  const { error } = await supabase.from('wiki_pages').upsert(fixedPages, {
-    onConflict: 'id',
-  });
-
-  if (error) throw error;
-}
 
 async function loadDataFromSupabase(): Promise<WikiData> {
-  await seedSupabaseIfEmpty();
-  await syncFixedPagesToSupabase();
-
   const [
     { data: pageRows, error: pageError },
     { data: logRows, error: logError },
@@ -2183,10 +2136,11 @@ export default function YulturnWikiPrototype() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
+  let mounted = true;
 
-    const init = async () => {
+  const init = async () => {
       try {
+        await seedSupabaseIfEmpty();
         const loadedData = await loadDataFromSupabase();
         if (mounted) setData(loadedData);
       } catch (error) {
@@ -2223,46 +2177,34 @@ export default function YulturnWikiPrototype() {
     return [...sectionPages, ...peoplePages];
   }, [data]);
 
-  useEffect(() => {
+useEffect(() => {
   if (!sessionUser) return;
+
+  const refresh = async () => {
+    try {
+      const latest = await loadDataFromSupabase();
+      setData(latest);
+    } catch (error) {
+      console.error('realtime reload error:', error);
+    }
+  };
 
   const channel = supabase
     .channel('wiki-realtime')
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'wiki_pages' },
-      async () => {
-        try {
-          const latest = await loadDataFromSupabase();
-          setData(latest);
-        } catch (error) {
-          console.error('realtime reload error:', error);
-        }
-      }
+      refresh
     )
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'audit_logs' },
-      async () => {
-        try {
-          const latest = await loadDataFromSupabase();
-          setData(latest);
-        } catch (error) {
-          console.error('realtime reload error:', error);
-        }
-      }
+      refresh
     )
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'audit_changes' },
-      async () => {
-        try {
-          const latest = await loadDataFromSupabase();
-          setData(latest);
-        } catch (error) {
-          console.error('realtime reload error:', error);
-        }
-      }
+      refresh
     )
     .subscribe();
 
@@ -2270,6 +2212,8 @@ export default function YulturnWikiPrototype() {
     supabase.removeChannel(channel);
   };
 }, [sessionUser]);
+
+
 
   const visiblePages = useMemo(() => {
     if (sessionUser?.isAdmin) return allPages;
