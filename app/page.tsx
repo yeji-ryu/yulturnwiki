@@ -141,6 +141,8 @@ const HARD_CODED_USERS: UserAccount[] = [
   { id: '전승', password: '2131', name: '전승', role: '인턴', isAdmin: false },
   { id: '유지오', password: '2051', name: '유지오', role: '인턴', isAdmin: false },
   { id: '최은주', password: '3096', name: '최은주', role: '인턴', isAdmin: false },
+  { id: '전세희', password: '2181', name: '전세희', role: '인턴', isAdmin: false },
+  { id: '허자민', password: '1017', name: '허자민', role: '인턴', isAdmin: false },
   { id: 'admin', password: '123', name: '운영자', role: '관리자', isAdmin: true },
 ];
 
@@ -224,7 +226,9 @@ const USER_TEAM_MAP: Partial<Record<string, TeamKey>> = {
   원혁진: '회계팀',
   전승: '빌링팀',
   유지오: '빌링팀',
-  최은주: '빌링팀'
+  최은주: '빌링팀',
+  전세희: '업무지원팀',
+  허자민: '업무지원팀'
 };
 
 function buildPersonPages(): WikiPage[] {
@@ -337,6 +341,8 @@ const seedData: WikiData = {
 - [[전승|전승]]
 - [[유지오|유지오]]
 - [[최은주|최은주]]
+- [[전세희|전세희]]
+- [[허자민|허자민]]
 
 [안내]
 - 팀 이름을 누르면 팀 소개 화면으로 이동합니다.
