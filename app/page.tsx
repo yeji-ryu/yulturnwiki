@@ -2279,17 +2279,24 @@ useEffect(() => {
   }, [allPages, sessionUser]);
 
   const searchResults = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return visiblePages;
+  const normalize = (str: string) =>
+    str.replace(/\s+/g, '').trim();
 
-    return visiblePages.filter((page) => {
-      const title = (page.title || '').toLowerCase();
-      const summary = (page.summary || '').toLowerCase();
-      const content = (page.content || '').toLowerCase();
+  const q = normalize(search);
+  if (!q) return visiblePages;
 
-      return title.includes(q) || summary.includes(q) || content.includes(q);
-    });
-  }, [visiblePages, search]);
+  return visiblePages.filter((page) => {
+    const title = normalize(page.title || '');
+    const summary = normalize(page.summary || '');
+    const content = normalize(page.content || '');
+
+    return (
+      title.includes(q) ||
+      summary.includes(q) ||
+      content.includes(q)
+    );
+  });
+}, [visiblePages, search]);
 
   const selectedPage = useMemo(
     () => allPages.find((page) => page.id === selectedId) ?? null,
