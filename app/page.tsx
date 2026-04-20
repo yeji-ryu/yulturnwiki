@@ -1389,7 +1389,7 @@ function LoginScreen({ onLogin }: { onLogin: (user: UserAccount) => void }) {
             </div>
 
             <div className="max-w-2xl rounded-[28px] border border-white/10 bg-white/10 p-8 text-white shadow-2xl backdrop-blur-md">
-              <h1 className="text-3xl font-bold">YulturnWiki</h1>
+              <h1 className="text-3xl font-bold">YulternWiki</h1>
               <p className="mt-4 text-base leading-7 text-white/85">
                 율촌 인턴끼리만 공유하는 내부 위키입니다.
                 <br />
@@ -2441,7 +2441,7 @@ useEffect(() => {
   const handleShare = async () => {
     if (!selectedPage) return;
 
-    const text = `YulturnWiki / ${selectedPage.title}`;
+    const text = `YulternWiki / ${selectedPage.title}`;
 
     try {
       await navigator.clipboard.writeText(text);
