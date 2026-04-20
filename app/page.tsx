@@ -67,7 +67,7 @@ type AuditLog = {
   id: string;
   pageId: string;
   pageTitle: string;
-  action: 'seed' | 'update';
+  action: 'seed' | 'create' | 'update';
   actorId: string;
   actorName: string;
   actorRole: string;
@@ -99,7 +99,7 @@ type AuditLogRow = {
   id: string;
   page_id: string;
   page_title: string | null;
-  action: 'seed' | 'update';
+  action: 'seed' | 'create' | 'update';
   actor_id: string | null;
   actor_name: string | null;
   actor_role: string | null;
@@ -1938,6 +1938,29 @@ function fieldLabel(field: AuditChange['field']) {
   }
 }
 
+function slugifyKoreanTitle(title: string) {
+  return title
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-가-힣]/g, '')
+    .replace(/\-+/g, '-')
+    .replace(/^\-+|\-+$/g, '');
+}
+
+function buildUniquePageId(title: string, allPages: WikiPage[]) {
+  const base = slugifyKoreanTitle(title) || `page-${Date.now()}`;
+  let nextId = base;
+  let counter = 2;
+
+  while (allPages.some((page) => page.id === nextId)) {
+    nextId = `${base}-${counter}`;
+    counter += 1;
+  }
+
+  return nextId;
+}
+
 function AdminAuditPanel({
   logs,
   onNavigate,
@@ -2015,6 +2038,143 @@ function AdminAuditPanel({
               )}
             </div>
           ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CreatePagePanel({
+  onCreate,
+}: {
+  onCreate: (payload: {
+    title: string;
+    summary: string;
+    content: string;
+    category: string;
+  }) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [summary, setSummary] = useState('');
+  const [content, setContent] = useState('[기본 내용]\n- 내용을 입력하세요');
+  const [category, setCategory] = useState('기타');
+  const [saving, setSaving] = useState(false);
+
+  const resetForm = () => {
+    setTitle('');
+    setSummary('');
+    setContent('[기본 내용]\n- 내용을 입력하세요');
+    setCategory('기타');
+  };
+
+  return (
+    <div className="mt-10 rounded border border-[#ddd] bg-white">
+      <div className="border-b border-[#e5e5e5] bg-[#f8f9fa] px-6 py-4">
+        <h2 className="text-[20px] font-bold text-[#243b53]">새 페이지 추가</h2>
+        <p className="mt-1 text-sm text-[#66788a]">
+          새 문서를 직접 생성할 수 있습니다.
+        </p>
+      </div>
+
+      <div className="px-6 py-5">
+        {!open ? (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="rounded border border-[#ccd6df] bg-white px-4 py-2 text-sm text-[#444] hover:bg-[#f8f8f8]"
+          >
+            + 새 페이지 추가
+          </button>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-[#444]">제목</label>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full rounded border border-[#ccc] px-3 py-2 outline-none focus:border-[#0b3f79]"
+                placeholder="예: 복사기 사용 팁"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-[#444]">요약</label>
+              <textarea
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                rows={3}
+                className="w-full rounded border border-[#ccc] px-3 py-2 outline-none focus:border-[#0b3f79]"
+                placeholder="문서 한 줄 설명"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-[#444]">카테고리</label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full rounded border border-[#ccc] px-3 py-2 outline-none focus:border-[#0b3f79]"
+              >
+                <option value="사내 생활">사내 생활</option>
+                <option value="업무 정보">업무 정보</option>
+                <option value="경험 공유">경험 공유</option>
+                <option value="기타">기타</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-[#444]">본문</label>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={12}
+                className="w-full rounded border border-[#ccc] px-3 py-2 font-mono text-sm outline-none focus:border-[#0b3f79]"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={async () => {
+                  if (!title.trim()) {
+                    window.alert('제목을 입력해주세요.');
+                    return;
+                  }
+
+                  try {
+                    setSaving(true);
+                    await onCreate({
+                      title,
+                      summary,
+                      content,
+                      category,
+                    });
+                    resetForm();
+                    setOpen(false);
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+                className="rounded bg-[#0b3f79] px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60"
+              >
+                {saving ? '생성 중...' : '생성'}
+              </button>
+
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  resetForm();
+                  setOpen(false);
+                }}
+                className="rounded border border-[#ccc] bg-white px-4 py-2 text-sm text-[#444] hover:bg-[#f8f8f8]"
+              >
+                취소
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -2388,6 +2548,7 @@ useEffect(() => {
   if (!draft || !sessionUser || !selectedPage) return;
   if (draft.id === ADMIN_PAGE_ID && !sessionUser.isAdmin) return;
 
+  
   const original =
     data.people.find((item) => item.id === draft.id) ||
     data.sections.find((item) => item.id === draft.id);
@@ -2437,6 +2598,93 @@ useEffect(() => {
     window.alert(`Supabase save error: ${JSON.stringify(error)}`);
   }
 };
+
+const handleCreatePage = async ({
+      title,
+      summary,
+      content,
+      category,
+    }: {
+      title: string;
+      summary: string;
+      content: string;
+      category: string;
+    }) => {
+      if (!sessionUser) return;
+
+      const trimmedTitle = title.trim();
+      const trimmedSummary = summary.trim();
+      const trimmedContent = content.trim();
+
+      if (!trimmedTitle) {
+        window.alert('제목을 입력해주세요.');
+        return;
+      }
+
+      const generatedId = buildUniquePageId(trimmedTitle, allPages);
+
+      if (allPages.some((page) => page.id === generatedId)) {
+        window.alert('같은 ID의 문서가 이미 존재합니다.');
+        return;
+      }
+
+      const newPage: WikiPage = {
+        id: generatedId,
+        title: trimmedTitle,
+        summary: trimmedSummary,
+        content: trimmedContent || '[기본 내용]\n- 내용을 입력하세요',
+        category,
+        icon: 'file',
+        group: category,
+        updatedAt: new Date().toISOString(),
+        updatedBy: sessionUser.dbId ?? sessionUser.id,
+      };
+
+      const log = pushLog(
+        newPage.id,
+        newPage.title,
+        'create',
+        '새 문서 생성',
+        [
+          {
+            field: 'title',
+            before: '',
+            after: newPage.title,
+          },
+          {
+            field: 'summary',
+            before: '',
+            after: newPage.summary,
+          },
+          {
+            field: 'content',
+            before: '',
+            after: newPage.content,
+          },
+        ],
+      );
+
+      try {
+        await savePageToSupabase(newPage);
+        if (log) {
+          await saveAuditLogToSupabase(log);
+        }
+
+        setData((prev) => ({
+          ...prev,
+          sections: [...prev.sections, newPage],
+          auditLogs: log ? [...prev.auditLogs, log] : prev.auditLogs,
+        }));
+
+        setSelectedId(newPage.id);
+        setEditing(false);
+        setSearch('');
+      } catch (error) {
+        console.error('create page error:', error);
+        window.alert(`페이지 생성 실패: ${JSON.stringify(error)}`);
+      }
+    };
+
 
   const handleShare = async () => {
     if (!selectedPage) return;
@@ -2500,6 +2748,10 @@ useEffect(() => {
                 canGoBack={canGoBack}
                 isAdmin={sessionUser.isAdmin}
               />
+
+              {selectedPage.id !== ADMIN_PAGE_ID ? (
+                <CreatePagePanel onCreate={handleCreatePage} />
+              ) : null}
 
               {selectedPage.id === ADMIN_PAGE_ID && sessionUser.isAdmin ? (
                 <AdminAuditPanel logs={data.auditLogs} onNavigate={navigateTo} />
