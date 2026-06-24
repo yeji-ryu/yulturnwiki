@@ -1413,6 +1413,10 @@ function LoginScreen({ onLogin }: { onLogin: (user: UserAccount) => void }) {
                 율촌 인턴끼리만 공유하는 내부 위키입니다.
                 <br />
                 비밀 유지 해주세요.
+                <br />
+                <br />
+                문의가 있다면 2026년 상반기 인프라보안팀 인턴 유예지
+                (010-7329-3415)로 편하게 연락주세요 :)
               </p>
             </div>
           </motion.div>
